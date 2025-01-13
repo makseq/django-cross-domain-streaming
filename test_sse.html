@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Automax SSE Test</title>
+</head>
+<body>
+  <script src="eventsource.js"></script>
+
+  <h1>SSE Test</h1>
+  <button id="createBtn">Create Project Setup</button>
+
+  <div id="setupInfo"></div>
+  <div id="sseData"></div>
+
+  <script>
+    const createBtn = document.getElementById('createBtn');
+    const setupInfo = document.getElementById('setupInfo');
+    const sseData = document.getElementById('sseData');
+
+    let projectId = null;
+    let token = null;
+
+    createBtn.onclick = async () => {
+      // 1. Create project via POST
+      const res = await fetch('http://localhost:8000/api/project-setup/create/', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      projectId = data.project_setup_id;
+      token = data.request_token;
+
+      setupInfo.innerHTML = `project_setup_id: ${projectId}, token: ${token}`;
+
+      // 2. Open SSE stream
+      const sseUrl = `http://localhost:8000/api/project-setup/${projectId}/sse/`;
+      const evtSource = new EventSourcePolyfill(sseUrl, {
+        headers: {
+          'X-Request-Token': token
+        }
+      });
+
+      evtSource.onmessage = (event) => {
+        console.log("SSE Data:", event.data);
+        // e.g., display partial updates
+      };
+
+      // Listen for the final "complete" event
+      evtSource.addEventListener("complete", (event) => {
+        console.log("Received 'complete' event. Closing SSE now.");
+        evtSource.close();
+        // The stream ends cleanly; no repeated errors in console.
+      });
+
+      evtSource.onerror = (err) => {
+        console.error("SSE Error", err);
+      };
+    };
+  </script>
+</body>
+</html>
