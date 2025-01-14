@@ -132,17 +132,17 @@ CELERY_ENABLED = env.bool('CELERY_ENABLED', default=False)
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
 
-CHANNEL_REDIS_HOST = env('CHANNEL_REDIS_HOST', default='localhost')
-CHANNEL_REDIS_PORT = env.int('CHANNEL_REDIS_PORT', default=6379)
-CHANNEL_REDIS_DB = env.int('CHANNEL_REDIS_DB', default=0)
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT, CHANNEL_REDIS_DB)],
-        },
-    },
-}
+# CHANNEL_REDIS_HOST = env('CHANNEL_REDIS_HOST', default='localhost')
+# CHANNEL_REDIS_PORT = env.int('CHANNEL_REDIS_PORT', default=6379)
+# CHANNEL_REDIS_DB = env.int('CHANNEL_REDIS_DB', default=0)
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT, CHANNEL_REDIS_DB)],
+#         },
+#     },
+# }
 
 LOGGING = {
     'version': 1,
