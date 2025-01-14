@@ -1,4 +1,6 @@
 import uuid
+import logging
+
 from time import sleep
 from django.views import View
 from django.http import JsonResponse, StreamingHttpResponse
@@ -9,6 +11,9 @@ from threading import Thread
 
 from .models import ProjectSetup
 from .functions import celery_run_rag_llm, run_rag_llm
+
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -23,9 +28,11 @@ class CreateProjectSetupView(View):
         if settings.CELERY_ENABLED:
             # Launch Celery task
             celery_run_rag_llm.delay(project.id)
+            logger.info(f"=> Celery task launched for project setup {project.id}")
         else:
             # Run task in a separate thread
             Thread(target=run_rag_llm, args=(project.id,)).start()
+            logger.info(f"=> Thread task launched for project setup {project.id}")
 
         return JsonResponse({
             'project_setup_id': project.id,
