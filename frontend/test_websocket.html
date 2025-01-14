@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Token Generation + WebSocket Auth</title>
+</head>
+<body>
+  <h1>WebSocket Test</h1>
+  <button id="createBtn">Create Project Setup</button>
+  <div id="setupInfo"></div>
+  <div id="wsLogs"></div>
+
+  <script>
+    const createBtn = document.getElementById('createBtn');
+    const setupInfo = document.getElementById('setupInfo');
+    const wsLogs = document.getElementById('wsLogs');
+
+    let createdProjectId = null;
+    let generatedToken = null;
+
+    createBtn.onclick = async () => {
+      // 1) Make a POST to create the ProjectSetup and get token
+      const res = await fetch('http://localhost:8000/api/project-setup/create/', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      createdProjectId = data.project_setup_id;
+      generatedToken = data.request_token;
+
+      setupInfo.innerHTML = `Got project_setup_id=${createdProjectId}, token=${generatedToken}`;
+
+      // 2) Open WebSocket. Notice we do NOT pass the token in the URL
+      const wsUrl = `ws://localhost:8000/ws/project-setup/`; 
+      const socket = new WebSocket(wsUrl);
+
+      // 3) Once connected, send the token in the first message
+      socket.onopen = () => {
+        wsLogs.innerHTML += `<p>WebSocket open. Sending auth_init with token...</p>`;
+        socket.send(JSON.stringify({
+          type: "auth_init",
+          token: generatedToken
+        }));
+      };
+
+      // 4) Listen for messages (partial updates, final result, etc.)
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        wsLogs.innerHTML += `<p>Received: ${JSON.stringify(msg)}</p>`;
+      };
+
+      socket.onclose = (event) => {
+        wsLogs.innerHTML += `<p>WebSocket closed (code: ${event.code})</p>`;
+      };
+
+      socket.onerror = (err) => {
+        wsLogs.innerHTML += `<p style="color:red;">Error: ${err}</p>`;
+        console.log(err);
+      };
+    };
+  </script>
+</body>
+</html>

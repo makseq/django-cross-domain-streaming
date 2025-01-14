@@ -12,6 +12,7 @@
 
   <div id="setupInfo"></div>
   <div id="sseData"></div>
+  <pre id="log"></pre>
 
   <script>
     const createBtn = document.getElementById('createBtn');
@@ -30,7 +31,7 @@
       projectId = data.project_setup_id;
       token = data.request_token;
 
-      setupInfo.innerHTML = `project_setup_id: ${projectId}, token: ${token}`;
+      setupInfo.innerHTML = `project_setup_id: ${projectId}, request_token: ${token}`;
 
       // 2. Open SSE stream
       const sseUrl = `http://localhost:8000/api/project-setup/${projectId}/sse/`;
@@ -42,20 +43,23 @@
 
       evtSource.onmessage = (event) => {
         console.log("SSE Data:", event.data);
+        log.innerHTML += `\n${event.data}`;
         // e.g., display partial updates
       };
 
       // Listen for the final "complete" event
       evtSource.addEventListener("complete", (event) => {
         console.log("Received 'complete' event. Closing SSE now.");
+        log.innerHTML += `\nReceived 'complete' event. Closing SSE now.`;
         evtSource.close();
         // The stream ends cleanly; no repeated errors in console.
       });
 
       evtSource.onerror = (err) => {
         console.error("SSE Error", err);
+        log.innerHTML += `\nSSE Error: ${err}`;
       };
-    };
+    };  
   </script>
 </body>
 </html>

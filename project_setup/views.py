@@ -4,9 +4,11 @@ from django.views import View
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from threading import Thread
 
 from .models import ProjectSetup
-from .functions import run_rag_llm
+from .functions import celery_run_rag_llm, run_rag_llm
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -18,8 +20,12 @@ class CreateProjectSetupView(View):
         token = uuid.uuid4().hex
         project = ProjectSetup.objects.create(request_token=token)
 
-        # Launch Celery task
-        run_rag_llm.delay(project.id)
+        if settings.CELERY_ENABLED:
+            # Launch Celery task
+            celery_run_rag_llm.delay(project.id)
+        else:
+            # Run task in a separate thread
+            Thread(target=run_rag_llm, args=(project.id,)).start()
 
         return JsonResponse({
             'project_setup_id': project.id,

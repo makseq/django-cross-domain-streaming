@@ -4,6 +4,10 @@ import time
 
 
 @shared_task
+def celery_run_rag_llm(project_setup_id):
+    run_rag_llm(project_setup_id)
+
+
 def run_rag_llm(project_setup_id):
     # simulate a long-running process
     project = ProjectSetup.objects.get(id=project_setup_id)

@@ -9,18 +9,19 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+import environ
 
 from pathlib import Path
+
+
+env = environ.Env()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$kmi70$@vr!49hv)v_y!7!zvj*cw#j5sw&oewtyp+c$$+6a-j$'
+SECRET_KEY = 'django-insecure-$kmi70$@vwdqr!49hv)v_y!7!zvj*cw#jfe5sw&oewtyp+c$$+6a-j$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'corsheaders',
     'project_setup',
 ]
@@ -71,6 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.routing.application'
 
 
 # Database
@@ -107,11 +110,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -125,12 +125,21 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-
 CORS_ALLOW_ALL_ORIGINS = True
-# OR
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:8080",
-# ]
 CORS_ALLOW_HEADERS = ['*']
+
+CELERY_ENABLED = env.bool('CELERY_ENABLED', default=False)
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+
+CHANNEL_REDIS_HOST = env('CHANNEL_REDIS_HOST', default='localhost')
+CHANNEL_REDIS_PORT = env.int('CHANNEL_REDIS_PORT', default=6379)
+CHANNEL_REDIS_DB = env.int('CHANNEL_REDIS_DB', default=0)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(CHANNEL_REDIS_HOST, CHANNEL_REDIS_PORT, CHANNEL_REDIS_DB)],
+        },
+    },
+}
